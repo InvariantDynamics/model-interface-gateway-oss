@@ -44,7 +44,7 @@ Cross-cutting concerns available now:
 Repo root:
 
 ```bash
-cd /Users/zacnickens/Projects/model-interface-gateway
+cd model-interface-gateway-oss
 ```
 
 ## 4) Run Modes

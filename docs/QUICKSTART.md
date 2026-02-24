@@ -17,7 +17,7 @@ Estimated time: 10 minutes.
 From the repo root:
 
 ```bash
-cd /Users/zacnickens/Projects/model-interface-gateway
+cd model-interface-gateway-oss
 ```
 
 ## 1) Start `migd`
