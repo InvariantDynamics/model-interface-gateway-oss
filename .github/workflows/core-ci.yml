@@ -1,0 +1,31 @@
+name: core-ci
+
+on:
+  pull_request:
+    paths:
+      - 'core/**'
+      - 'conformance/**'
+      - 'adapters/**'
+      - 'sdk/go/**'
+      - 'go.mod'
+      - 'go.sum'
+      - '.github/workflows/core-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'core/**'
+      - 'conformance/**'
+      - 'adapters/**'
+      - 'sdk/go/**'
+      - 'go.mod'
+      - 'go.sum'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+      - run: go test ./core/... ./conformance/harness ./adapters/mcp ./sdk/go/...

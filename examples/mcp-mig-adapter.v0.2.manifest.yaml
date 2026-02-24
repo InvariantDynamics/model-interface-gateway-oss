@@ -1,0 +1,33 @@
+version: 0.2
+schema_version: 0.2
+default_binding: http
+mappings:
+  tools:
+    - mcp_name: observatory_infer
+      mig_capability: observatory.models.infer
+      mode: unary
+      timeout_ms: 30000
+      policy_tags: [inference, standard]
+      billing_tier: core
+    - mcp_name: observatory_infer_stream
+      mig_capability: observatory.models.infer
+      mode: server_stream
+      timeout_ms: 60000
+      policy_tags: [inference, streaming]
+      billing_tier: pro
+  resources:
+    - mcp_uri_pattern: observatory://artifact/{id}
+      mig_capability: observatory.artifacts.read
+      mode: unary
+  prompts:
+    - mcp_name: summarize_incident
+      mig_capability: observatory.prompts.incident_summary
+      mode: unary
+policy:
+  allow_streaming_tools: true
+  emit_event_notifications: true
+  require_traceparent: false
+  tenant_resolution: auth_claim
+billing:
+  meter: invocations_capability_tier
+  usage_scope: tenant

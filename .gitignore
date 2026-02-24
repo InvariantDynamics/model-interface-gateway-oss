@@ -1,0 +1,15 @@
+# macOS
+.DS_Store
+
+# build artifacts
+*.pb
+*.pb.cc
+*.pb.h
+bin/
+dist/
+coverage.out
+*.test
+
+# local tooling
+.vscode/
+.idea/

@@ -1,0 +1,131 @@
+openapi: 3.1.0
+info:
+  title: MIG Admin API
+  version: "0.1.0"
+  summary: Admin API for standalone MIG gateway operations
+paths:
+  /admin/v0.1/capabilities:
+    post:
+      summary: Create or update a capability descriptor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [descriptor]
+              properties:
+                descriptor:
+                  $ref: '#/components/schemas/CapabilityDescriptor'
+      responses:
+        '201': {description: Created}
+    get:
+      summary: List capability descriptors
+      responses:
+        '200': {description: OK}
+  /admin/v0.1/schemas:
+    post:
+      summary: Create or update schema registry entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [uri, schema]
+              properties:
+                uri:
+                  type: string
+                schema:
+                  type: object
+                  additionalProperties: true
+      responses:
+        '201': {description: Created}
+  /admin/v0.1/health/conformance:
+    get:
+      summary: Return profile health readiness
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  core: {type: boolean}
+                  streaming: {type: boolean}
+                  evented: {type: boolean}
+                  full: {type: boolean}
+  /admin/v0.1/connections:
+    get:
+      summary: List active long-lived runtime connections
+      parameters:
+        - name: tenant_id
+          in: query
+          required: false
+          schema: {type: string}
+        - name: protocol
+          in: query
+          required: false
+          schema: {type: string}
+        - name: kind
+          in: query
+          required: false
+          schema: {type: string}
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  generated_at: {type: string}
+                  summary:
+                    type: object
+                    properties:
+                      total: {type: integer}
+                      by_protocol:
+                        type: object
+                        additionalProperties: {type: integer}
+                      by_kind:
+                        type: object
+                        additionalProperties: {type: integer}
+                      by_tenant:
+                        type: object
+                        additionalProperties: {type: integer}
+                      nats_binding_active: {type: boolean}
+                  connections:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: {type: string}
+                        protocol: {type: string}
+                        kind: {type: string}
+                        tenant_id: {type: string}
+                        actor: {type: string}
+                        remote_addr: {type: string}
+                        started_at: {type: string}
+                        meta:
+                          type: object
+                          additionalProperties: true
+components:
+  schemas:
+    CapabilityDescriptor:
+      type: object
+      required: [id, version, modes, input_schema_uri, output_schema_uri, auth_scopes]
+      properties:
+        id: {type: string}
+        version: {type: string}
+        modes:
+          type: array
+          items: {type: string}
+        input_schema_uri: {type: string}
+        output_schema_uri: {type: string}
+        auth_scopes:
+          type: array
+          items: {type: string}
+        event_topics:
+          type: array
+          items: {type: string}

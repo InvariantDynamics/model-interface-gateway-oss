@@ -1,0 +1,59 @@
+openapi: 3.1.0
+info:
+  title: MIG Cloud Control Plane API
+  version: "0.1.0"
+  summary: Managed control-plane API surface for MIG Cloud
+paths:
+  /cloud/v0.1/orgs:
+    post:
+      summary: Create an organization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                id: {type: string}
+                name: {type: string}
+      responses:
+        '201': {description: Created}
+  /cloud/v0.1/tenants:
+    post:
+      summary: Create a tenant in an org
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, org_id]
+              properties:
+                id: {type: string}
+                name: {type: string}
+                org_id: {type: string}
+      responses:
+        '201': {description: Created}
+  /cloud/v0.1/gateways:
+    post:
+      summary: Create a hosted gateway assignment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tenant_id, region, binding]
+              properties:
+                id: {type: string}
+                tenant_id: {type: string}
+                region: {type: string}
+                binding: {type: string}
+      responses:
+        '201': {description: Created}
+  /cloud/v0.1/usage:
+    get:
+      summary: Get invocation usage snapshot
+      responses:
+        '200': {description: OK}

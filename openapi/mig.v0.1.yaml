@@ -1,0 +1,629 @@
+openapi: 3.1.0
+info:
+  title: MIG HTTP Binding
+  version: "0.1.0"
+  summary: MIG v0.1 HTTP transport binding profile
+  description: |
+    HTTP binding for MIG v0.1 core operations.
+
+    Required endpoints:
+    - POST /mig/v0.1/hello
+    - POST /mig/v0.1/discover
+    - POST /mig/v0.1/invoke/{capability}
+    - POST /mig/v0.1/publish/{topic}
+    - GET /mig/v0.1/subscribe/{topic} (SSE)
+    - POST /mig/v0.1/cancel/{message_id}
+    - POST /mig/v0.1/heartbeat
+
+    Stream endpoint:
+    - GET /mig/v0.1/stream (WebSocket) for bidirectional streaming.
+servers:
+  - url: https://api.example.com
+security:
+  - bearerAuth: []
+paths:
+  /mig/v0.1/hello:
+    post:
+      operationId: hello
+      tags: [Discovery]
+      summary: Negotiate MIG version and features
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HelloRequest'
+      responses:
+        '200':
+          description: Negotiated protocol and feature set
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HelloResponse'
+        '4XX':
+          $ref: '#/components/responses/Error'
+        '5XX':
+          $ref: '#/components/responses/Error'
+
+  /mig/v0.1/discover:
+    post:
+      operationId: discover
+      tags: [Discovery]
+      summary: List capabilities visible to caller
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DiscoverRequest'
+      responses:
+        '200':
+          description: Capability descriptors
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscoverResponse'
+        '4XX':
+          $ref: '#/components/responses/Error'
+        '5XX':
+          $ref: '#/components/responses/Error'
+
+  /mig/v0.1/invoke/{capability}:
+    post:
+      operationId: invoke
+      tags: [Invocation]
+      summary: Invoke a capability in unary mode
+      parameters:
+        - name: capability
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvokeRequest'
+      responses:
+        '200':
+          description: Capability invocation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvokeResponse'
+        '4XX':
+          $ref: '#/components/responses/Error'
+        '5XX':
+          $ref: '#/components/responses/Error'
+
+  /mig/v0.1/publish/{topic}:
+    post:
+      operationId: publish
+      tags: [Events]
+      summary: Publish an event payload to a topic
+      parameters:
+        - name: topic
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublishRequest'
+      responses:
+        '200':
+          description: Event publish acknowledgment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublishAck'
+        '4XX':
+          $ref: '#/components/responses/Error'
+        '5XX':
+          $ref: '#/components/responses/Error'
+
+  /mig/v0.1/subscribe/{topic}:
+    get:
+      operationId: subscribe
+      tags: [Events]
+      summary: Subscribe to a topic via Server-Sent Events
+      parameters:
+        - name: topic
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: consumer_id
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: resume_cursor
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: max_inflight
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: SSE stream of EventMessage envelopes
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: SSE where each data frame contains EventMessage JSON
+        '4XX':
+          $ref: '#/components/responses/Error'
+        '5XX':
+          $ref: '#/components/responses/Error'
+
+  /mig/v0.1/cancel/{message_id}:
+    post:
+      operationId: cancel
+      tags: [Control]
+      summary: Cancel an in-flight invocation or stream
+      parameters:
+        - name: message_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelRequest'
+      responses:
+        '200':
+          description: Cancellation acknowledgement
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CancelAck'
+        '4XX':
+          $ref: '#/components/responses/Error'
+        '5XX':
+          $ref: '#/components/responses/Error'
+
+  /mig/v0.1/heartbeat:
+    post:
+      operationId: heartbeat
+      tags: [Control]
+      summary: Exchange liveness and capacity hints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HeartbeatRequest'
+      responses:
+        '200':
+          description: Heartbeat acknowledgement
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HeartbeatAck'
+        '4XX':
+          $ref: '#/components/responses/Error'
+        '5XX':
+          $ref: '#/components/responses/Error'
+
+  /mig/v0.1/stream:
+    get:
+      operationId: stream
+      tags: [Invocation]
+      summary: WebSocket endpoint for bidirectional stream invoke
+      description: |
+        This endpoint upgrades to WebSocket and exchanges StreamFrame JSON messages.
+      responses:
+        '101':
+          description: Switching Protocols
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    Error:
+      description: MIG standard error envelope
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+
+  schemas:
+    MessageHeader:
+      type: object
+      required: [mig_version, message_id, timestamp, tenant_id]
+      properties:
+        mig_version:
+          type: string
+          example: "0.1"
+        message_id:
+          type: string
+          format: uuid
+        timestamp:
+          type: string
+          format: date-time
+        tenant_id:
+          type: string
+        session_id:
+          type: string
+        traceparent:
+          type: string
+          description: W3C Trace Context traceparent header value
+        idempotency_key:
+          type: string
+        deadline_ms:
+          type: integer
+          minimum: 1
+          default: 30000
+        meta:
+          type: object
+          description: |
+            Arbitrary metadata map. `idg.*` keys are reserved for product telemetry
+            and usage metering correlation.
+          additionalProperties: true
+
+    HelloRequest:
+      type: object
+      required: [header, supported_versions, requested_bindings]
+      properties:
+        header:
+          $ref: '#/components/schemas/MessageHeader'
+        supported_versions:
+          type: array
+          items:
+            type: string
+          example: ["0.1"]
+        requested_bindings:
+          type: array
+          items:
+            $ref: '#/components/schemas/BindingType'
+        requested_features:
+          type: array
+          items:
+            type: string
+
+    HelloResponse:
+      type: object
+      required: [header, selected_version, selected_binding]
+      properties:
+        header:
+          $ref: '#/components/schemas/MessageHeader'
+        selected_version:
+          type: string
+        selected_binding:
+          $ref: '#/components/schemas/BindingType'
+        enabled_features:
+          type: array
+          items:
+            type: string
+        server_id:
+          type: string
+
+    DiscoverRequest:
+      type: object
+      required: [header]
+      properties:
+        header:
+          $ref: '#/components/schemas/MessageHeader'
+        query:
+          type: string
+          description: Optional free-text filtering query
+        include_schema_refs:
+          type: boolean
+          default: true
+        include_qos:
+          type: boolean
+          default: true
+
+    DiscoverResponse:
+      type: object
+      required: [header, capabilities]
+      properties:
+        header:
+          $ref: '#/components/schemas/MessageHeader'
+        capabilities:
+          type: array
+          items:
+            $ref: '#/components/schemas/CapabilityDescriptor'
+
+    CapabilityDescriptor:
+      type: object
+      required: [id, version, modes, input_schema_uri, output_schema_uri, auth_scopes]
+      properties:
+        id:
+          type: string
+          example: observatory.models.infer
+        version:
+          type: string
+          example: 1.0.0
+        modes:
+          type: array
+          items:
+            $ref: '#/components/schemas/InvocationMode'
+        input_schema_uri:
+          type: string
+          format: uri
+        output_schema_uri:
+          type: string
+          format: uri
+        event_topics:
+          type: array
+          items:
+            type: string
+        auth_scopes:
+          type: array
+          items:
+            type: string
+        qos:
+          $ref: '#/components/schemas/QoSProfile'
+
+    QoSProfile:
+      type: object
+      properties:
+        max_payload_bytes:
+          type: integer
+          minimum: 1
+        supports_replay:
+          type: boolean
+        delivery_semantics:
+          $ref: '#/components/schemas/DeliverySemantics'
+        supports_ordering:
+          type: boolean
+
+    InvokeRequest:
+      type: object
+      required: [header, payload]
+      properties:
+        header:
+          $ref: '#/components/schemas/MessageHeader'
+        capability:
+          type: string
+          description: Optional duplicate of path capability value for parity with non-HTTP bindings
+        payload:
+          type: object
+          additionalProperties: true
+        stream_preference:
+          $ref: '#/components/schemas/StreamPreference'
+
+    InvokeResponse:
+      type: object
+      required: [header, capability, payload]
+      properties:
+        header:
+          $ref: '#/components/schemas/MessageHeader'
+        capability:
+          type: string
+        payload:
+          type: object
+          additionalProperties: true
+        result_schema_uri:
+          type: string
+          format: uri
+
+    PublishRequest:
+      type: object
+      required: [header, payload]
+      properties:
+        header:
+          $ref: '#/components/schemas/MessageHeader'
+        topic:
+          type: string
+          description: Optional duplicate of path topic value
+        key:
+          type: string
+        payload:
+          type: object
+          additionalProperties: true
+
+    PublishAck:
+      type: object
+      required: [header, topic, event_id, sequence, accepted]
+      properties:
+        header:
+          $ref: '#/components/schemas/MessageHeader'
+        topic:
+          type: string
+        event_id:
+          type: string
+        sequence:
+          type: integer
+          minimum: 0
+        accepted:
+          type: boolean
+
+    SubscribeRequest:
+      type: object
+      required: [header, topic]
+      properties:
+        header:
+          $ref: '#/components/schemas/MessageHeader'
+        topic:
+          type: string
+        consumer_id:
+          type: string
+        resume_cursor:
+          type: string
+        max_inflight:
+          type: integer
+          minimum: 1
+
+    EventMessage:
+      type: object
+      required: [header, topic, event_id, sequence, payload, published_at, replay]
+      properties:
+        header:
+          $ref: '#/components/schemas/MessageHeader'
+        topic:
+          type: string
+        event_id:
+          type: string
+        sequence:
+          type: integer
+          minimum: 0
+        payload:
+          type: object
+          additionalProperties: true
+        published_at:
+          type: string
+          format: date-time
+        replay:
+          type: boolean
+
+    CancelRequest:
+      type: object
+      required: [header]
+      properties:
+        header:
+          $ref: '#/components/schemas/MessageHeader'
+        target_message_id:
+          type: string
+          description: Optional duplicate of path message_id value
+        reason:
+          type: string
+
+    CancelAck:
+      type: object
+      required: [header, target_message_id, accepted, status]
+      properties:
+        header:
+          $ref: '#/components/schemas/MessageHeader'
+        target_message_id:
+          type: string
+        accepted:
+          type: boolean
+        status:
+          type: string
+
+    HeartbeatRequest:
+      type: object
+      required: [header]
+      properties:
+        header:
+          $ref: '#/components/schemas/MessageHeader'
+        interval_ms:
+          type: integer
+          minimum: 1
+
+    HeartbeatAck:
+      type: object
+      required: [header, suggested_interval_ms, load_factor]
+      properties:
+        header:
+          $ref: '#/components/schemas/MessageHeader'
+        suggested_interval_ms:
+          type: integer
+          minimum: 1
+        load_factor:
+          type: number
+
+    StreamFrame:
+      type: object
+      required: [header, stream_id, capability, kind]
+      properties:
+        header:
+          $ref: '#/components/schemas/MessageHeader'
+        stream_id:
+          type: string
+        capability:
+          type: string
+        kind:
+          $ref: '#/components/schemas/FrameKind'
+        payload:
+          type: object
+          additionalProperties: true
+        end_stream:
+          type: boolean
+        error:
+          $ref: '#/components/schemas/MigError'
+
+    ErrorEnvelope:
+      type: object
+      required: [header, error]
+      properties:
+        header:
+          $ref: '#/components/schemas/MessageHeader'
+        error:
+          $ref: '#/components/schemas/MigError'
+
+    MigError:
+      type: object
+      required: [code, message, retryable]
+      properties:
+        code:
+          $ref: '#/components/schemas/MigErrorCode'
+        message:
+          type: string
+        retryable:
+          type: boolean
+        details:
+          type: object
+          additionalProperties: true
+
+    BindingType:
+      type: string
+      enum:
+        - grpc
+        - nats
+        - http
+
+    InvocationMode:
+      type: string
+      enum:
+        - unary
+        - server_stream
+        - client_stream
+        - bidi_stream
+
+    StreamPreference:
+      type: string
+      enum:
+        - unary
+        - server_stream
+        - bidi_stream
+
+    DeliverySemantics:
+      type: string
+      enum:
+        - best_effort
+        - at_least_once
+        - exactly_once
+
+    FrameKind:
+      type: string
+      enum:
+        - request
+        - response
+        - event
+        - control
+        - error
+
+    MigErrorCode:
+      type: string
+      enum:
+        - MIG_INVALID_REQUEST
+        - MIG_UNAUTHORIZED
+        - MIG_FORBIDDEN
+        - MIG_NOT_FOUND
+        - MIG_UNSUPPORTED_CAPABILITY
+        - MIG_VERSION_MISMATCH
+        - MIG_TIMEOUT
+        - MIG_RATE_LIMITED
+        - MIG_BACKPRESSURE
+        - MIG_UNAVAILABLE
+        - MIG_INTERNAL

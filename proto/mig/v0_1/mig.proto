@@ -1,0 +1,230 @@
+syntax = "proto3";
+
+package mig.v0_1;
+
+option go_package = "github.com/mig-standard/mig/proto/mig/v0_1;migv01";
+option java_multiple_files = true;
+option java_package = "io.mig.v0_1";
+
+import "google/protobuf/struct.proto";
+import "google/protobuf/timestamp.proto";
+
+service Discovery {
+  rpc Hello(HelloRequest) returns (HelloResponse);
+  rpc Discover(DiscoverRequest) returns (DiscoverResponse);
+}
+
+service Invocation {
+  rpc Invoke(InvokeRequest) returns (InvokeResponse);
+  rpc StreamInvoke(stream StreamFrame) returns (stream StreamFrame);
+}
+
+service Events {
+  rpc Publish(PublishRequest) returns (PublishAck);
+  rpc Subscribe(SubscribeRequest) returns (stream EventMessage);
+}
+
+service Control {
+  rpc Cancel(CancelRequest) returns (CancelAck);
+  rpc Heartbeat(HeartbeatRequest) returns (HeartbeatAck);
+}
+
+message MessageHeader {
+  string mig_version = 1;
+  string message_id = 2;
+  google.protobuf.Timestamp timestamp = 3;
+  string tenant_id = 4;
+  string session_id = 5;
+  string traceparent = 6;
+  string idempotency_key = 7;
+  uint32 deadline_ms = 8;
+  // Namespaced metadata extensions. `idg.*` is reserved for product telemetry
+  // and usage metering correlation.
+  google.protobuf.Struct meta = 9;
+}
+
+message HelloRequest {
+  MessageHeader header = 1;
+  repeated string supported_versions = 2;
+  repeated BindingType requested_bindings = 3;
+  repeated string requested_features = 4;
+}
+
+message HelloResponse {
+  MessageHeader header = 1;
+  string selected_version = 2;
+  BindingType selected_binding = 3;
+  repeated string enabled_features = 4;
+  string server_id = 5;
+}
+
+message DiscoverRequest {
+  MessageHeader header = 1;
+  string query = 2;
+  bool include_schema_refs = 3;
+  bool include_qos = 4;
+}
+
+message DiscoverResponse {
+  MessageHeader header = 1;
+  repeated CapabilityDescriptor capabilities = 2;
+}
+
+message CapabilityDescriptor {
+  string id = 1;
+  string version = 2;
+  repeated InvocationMode modes = 3;
+  string input_schema_uri = 4;
+  string output_schema_uri = 5;
+  repeated string event_topics = 6;
+  repeated string auth_scopes = 7;
+  QoSProfile qos = 8;
+}
+
+message QoSProfile {
+  uint64 max_payload_bytes = 1;
+  bool supports_replay = 2;
+  DeliverySemantics delivery_semantics = 3;
+  bool supports_ordering = 4;
+}
+
+message InvokeRequest {
+  MessageHeader header = 1;
+  string capability = 2;
+  google.protobuf.Struct payload = 3;
+  StreamPreference stream_preference = 4;
+}
+
+message InvokeResponse {
+  MessageHeader header = 1;
+  string capability = 2;
+  google.protobuf.Struct payload = 3;
+  string result_schema_uri = 4;
+}
+
+message StreamFrame {
+  MessageHeader header = 1;
+  string stream_id = 2;
+  string capability = 3;
+  FrameKind kind = 4;
+  google.protobuf.Struct payload = 5;
+  bool end_stream = 6;
+  MigError error = 7;
+}
+
+message PublishRequest {
+  MessageHeader header = 1;
+  string topic = 2;
+  string key = 3;
+  google.protobuf.Struct payload = 4;
+}
+
+message PublishAck {
+  MessageHeader header = 1;
+  string topic = 2;
+  string event_id = 3;
+  uint64 sequence = 4;
+  bool accepted = 5;
+}
+
+message SubscribeRequest {
+  MessageHeader header = 1;
+  string topic = 2;
+  string consumer_id = 3;
+  string resume_cursor = 4;
+  uint32 max_inflight = 5;
+}
+
+message EventMessage {
+  MessageHeader header = 1;
+  string topic = 2;
+  string event_id = 3;
+  uint64 sequence = 4;
+  google.protobuf.Struct payload = 5;
+  google.protobuf.Timestamp published_at = 6;
+  bool replay = 7;
+}
+
+message CancelRequest {
+  MessageHeader header = 1;
+  string target_message_id = 2;
+  string reason = 3;
+}
+
+message CancelAck {
+  MessageHeader header = 1;
+  string target_message_id = 2;
+  bool accepted = 3;
+  string status = 4;
+}
+
+message HeartbeatRequest {
+  MessageHeader header = 1;
+  uint32 interval_ms = 2;
+}
+
+message HeartbeatAck {
+  MessageHeader header = 1;
+  uint32 suggested_interval_ms = 2;
+  double load_factor = 3;
+}
+
+message MigError {
+  MigErrorCode code = 1;
+  string message = 2;
+  bool retryable = 3;
+  google.protobuf.Struct details = 4;
+}
+
+enum BindingType {
+  BINDING_TYPE_UNSPECIFIED = 0;
+  BINDING_TYPE_GRPC = 1;
+  BINDING_TYPE_NATS = 2;
+  BINDING_TYPE_HTTP = 3;
+}
+
+enum InvocationMode {
+  INVOCATION_MODE_UNSPECIFIED = 0;
+  INVOCATION_MODE_UNARY = 1;
+  INVOCATION_MODE_SERVER_STREAM = 2;
+  INVOCATION_MODE_CLIENT_STREAM = 3;
+  INVOCATION_MODE_BIDI_STREAM = 4;
+}
+
+enum StreamPreference {
+  STREAM_PREFERENCE_UNSPECIFIED = 0;
+  STREAM_PREFERENCE_UNARY = 1;
+  STREAM_PREFERENCE_SERVER_STREAM = 2;
+  STREAM_PREFERENCE_BIDI_STREAM = 3;
+}
+
+enum DeliverySemantics {
+  DELIVERY_SEMANTICS_UNSPECIFIED = 0;
+  DELIVERY_SEMANTICS_BEST_EFFORT = 1;
+  DELIVERY_SEMANTICS_AT_LEAST_ONCE = 2;
+  DELIVERY_SEMANTICS_EXACTLY_ONCE = 3;
+}
+
+enum FrameKind {
+  FRAME_KIND_UNSPECIFIED = 0;
+  FRAME_KIND_REQUEST = 1;
+  FRAME_KIND_RESPONSE = 2;
+  FRAME_KIND_EVENT = 3;
+  FRAME_KIND_CONTROL = 4;
+  FRAME_KIND_ERROR = 5;
+}
+
+enum MigErrorCode {
+  MIG_ERROR_CODE_UNSPECIFIED = 0;
+  MIG_INVALID_REQUEST = 1;
+  MIG_UNAUTHORIZED = 2;
+  MIG_FORBIDDEN = 3;
+  MIG_NOT_FOUND = 4;
+  MIG_UNSUPPORTED_CAPABILITY = 5;
+  MIG_VERSION_MISMATCH = 6;
+  MIG_TIMEOUT = 7;
+  MIG_RATE_LIMITED = 8;
+  MIG_BACKPRESSURE = 9;
+  MIG_UNAVAILABLE = 10;
+  MIG_INTERNAL = 11;
+}

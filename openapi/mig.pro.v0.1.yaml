@@ -1,0 +1,47 @@
+openapi: 3.1.0
+info:
+  title: MIG Pro API
+  version: "0.1.0"
+  summary: Self-hosted enterprise API extensions for MIG
+paths:
+  /pro/v0.1/policies/validate:
+    post:
+      summary: Validate policy decision for a tenant capability action
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tenant_id, capability, action]
+              properties:
+                tenant_id: {type: string}
+                capability: {type: string}
+                action: {type: string}
+      responses:
+        '200': {description: OK}
+  /pro/v0.1/quotas:
+    post:
+      summary: Set tenant invocation quota
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tenant_id, max_invocations]
+              properties:
+                tenant_id: {type: string}
+                max_invocations: {type: integer, minimum: 1}
+      responses:
+        '200': {description: OK}
+  /pro/v0.1/audit/export:
+    get:
+      summary: Export audit records
+      parameters:
+        - name: tenant_id
+          in: query
+          required: false
+          schema: {type: string}
+      responses:
+        '200': {description: OK}

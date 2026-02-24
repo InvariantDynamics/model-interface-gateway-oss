@@ -1,0 +1,25 @@
+version: 0.1
+default_binding: grpc
+mappings:
+  tools:
+    - mcp_name: observatory_infer
+      mig_capability: observatory.models.infer
+      mode: unary
+      timeout_ms: 30000
+    - mcp_name: observatory_infer_stream
+      mig_capability: observatory.models.infer
+      mode: server_stream
+      timeout_ms: 60000
+  resources:
+    - mcp_uri_pattern: observatory://artifact/{id}
+      mig_capability: observatory.artifacts.read
+      mode: unary
+  prompts:
+    - mcp_name: summarize_incident
+      mig_capability: observatory.prompts.incident_summary
+      mode: unary
+policy:
+  allow_streaming_tools: true
+  emit_event_notifications: true
+  require_traceparent: false
+  tenant_resolution: auth_claim
