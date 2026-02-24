@@ -15,8 +15,8 @@ if ! command -v protoc-gen-go >/dev/null 2>&1 || ! command -v protoc-gen-go-grpc
 fi
 
 protoc -I . \
-  --go_out=. --go_opt=module=github.com/mig-standard/mig \
-  --go-grpc_out=. --go-grpc_opt=module=github.com/mig-standard/mig \
+  --go_out=. --go_opt=module=github.com/InvariantDynamics/model-interface-gateway-oss \
+  --go-grpc_out=. --go-grpc_opt=module=github.com/InvariantDynamics/model-interface-gateway-oss \
   proto/mig/v0_1/mig.proto
 
 echo "Generated: proto/mig/v0_1/mig.pb.go and proto/mig/v0_1/mig_grpc.pb.go"

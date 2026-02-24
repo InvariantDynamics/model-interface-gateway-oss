@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/mig-standard/mig/core/pkg/mig"
+	"github.com/InvariantDynamics/model-interface-gateway-oss/core/pkg/mig"
 )
 
 func newTestServer() (*mig.Service, *httptest.Server) {

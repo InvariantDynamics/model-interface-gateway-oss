@@ -1,4 +1,4 @@
-module github.com/mig-standard/mig
+module github.com/InvariantDynamics/model-interface-gateway-oss
 
 go 1.24.0
 

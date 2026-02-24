@@ -1942,8 +1942,8 @@ const file_proto_mig_v0_1_mig_proto_rawDesc = "" +
 	"\tSubscribe\x12\x1a.mig.v0_1.SubscribeRequest\x1a\x16.mig.v0_1.EventMessage0\x012\x82\x01\n" +
 	"\aControl\x126\n" +
 	"\x06Cancel\x12\x17.mig.v0_1.CancelRequest\x1a\x13.mig.v0_1.CancelAck\x12?\n" +
-	"\tHeartbeat\x12\x1a.mig.v0_1.HeartbeatRequest\x1a\x16.mig.v0_1.HeartbeatAckBB\n" +
-	"\vio.mig.v0_1P\x01Z1github.com/mig-standard/mig/proto/mig/v0_1;migv01b\x06proto3"
+	"\tHeartbeat\x12\x1a.mig.v0_1.HeartbeatRequest\x1a\x16.mig.v0_1.HeartbeatAckB_\n" +
+	"\vio.mig.v0_1P\x01ZNgithub.com/InvariantDynamics/model-interface-gateway-oss/proto/mig/v0_1;migv01b\x06proto3"
 
 var (
 	file_proto_mig_v0_1_mig_proto_rawDescOnce sync.Once

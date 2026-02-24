@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/mig-standard/mig/core/pkg/mig"
+	"github.com/InvariantDynamics/model-interface-gateway-oss/core/pkg/mig"
 )
 
 func TestToolsListAndCall(t *testing.T) {

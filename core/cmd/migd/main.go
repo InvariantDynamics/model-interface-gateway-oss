@@ -9,7 +9,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/mig-standard/mig/core/pkg/mig"
+	"github.com/InvariantDynamics/model-interface-gateway-oss/core/pkg/mig"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"

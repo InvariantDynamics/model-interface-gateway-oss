@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package mig.v0_1;
 
-option go_package = "github.com/mig-standard/mig/proto/mig/v0_1;migv01";
+option go_package = "github.com/InvariantDynamics/model-interface-gateway-oss/proto/mig/v0_1;migv01";
 option java_multiple_files = true;
 option java_package = "io.mig.v0_1";
 

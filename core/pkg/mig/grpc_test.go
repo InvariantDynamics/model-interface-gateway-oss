@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	migv01 "github.com/mig-standard/mig/proto/mig/v0_1"
+	migv01 "github.com/InvariantDynamics/model-interface-gateway-oss/proto/mig/v0_1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/test/bufconn"

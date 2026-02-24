@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/mig-standard/mig/adapters/mcp"
+	"github.com/InvariantDynamics/model-interface-gateway-oss/adapters/mcp"
 )
 
 func main() {
